@@ -7,7 +7,8 @@
 #Created Time: Tue 15 Nov 2016 03:53:10 PM CST
 ################################################
 
-
+#Executar com python "C:\Users\Usuário\Downloads\Bioinformatica\TCGA\codigo_de_manifesto.py" -i "C:\Users\Usuário\Downloads\Bioinformatica\TCGA\gdc_manifest.BRCA_LUAD_COAD.txt"
+#Modificar o nome do caminho do arquivo conforme necessário
 
 import os,sys
 import requests
