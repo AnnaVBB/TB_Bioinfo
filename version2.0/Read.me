@@ -1,1 +1,12 @@
 Read.me
+1) Baixar o manifesto (483 tumoral, 41 normal) {GDC portal}
+2) Baixar os dados clínicos e criar uma tabela com o tipo de projeto, id e barcode {clinical_data.R}
+3) Baixar o manifesto com o tipo de amostra e barcode (generate_manifest.py)
+python C:\\Users\\Usuário\\Downloads\\TCGA\\generate_manifest.py -i C:\\Users\\Usuário\\Downloads\\TCGA\\gdc_manifest_coad_one.txt
+4) Filtrar o manifesto, pareando uma amostra normal com uma tumoral e excluindo as demais (filtered_manifest.py)
+5) Excluir as colunas sample_type, id e barcode (rebuild_manifest.py)
+6) Baixar os dados de expressão gênica (.\gdc-client download -m manifesto_coad_reb.txt)
+7) Contagem RNA-Seq, de modo que os id's estejam alinhados ao manifesto (build_matrix.R)
+8) Matriz Deseq (sem normalização)
+9) Volcano plot
+10)
