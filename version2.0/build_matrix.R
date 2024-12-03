@@ -1,59 +1,108 @@
 library(dplyr)
+#DEseq e análises
 
-# Carregar manifesto
-manifesto <- read.delim('C:/Users/Usuário/Downloads/TCGA/manifest_coad_filtered.txt', header = TRUE)
-manifest_ids <- manifesto$file_id  # Ajuste para a coluna que contém os IDs no manifesto
-print(manifest_ids)  # Verifique os IDs do manifesto
+# Carregar metadados
+metadata <- read.delim("C:/Users/Usuário/Downloads/TCGA/manifest_coad_filtered.txt", header = TRUE)
 
-# Listar diretórios de RNA-Seq disponíveis
-rnaseq_coad.dirs <- list.files('C:/Users/Usuário/Downloads/TCGA/COAD/')
-print(rnaseq_coad.dirs)
+# Obter IDs das colunas da matriz de contagem (excluindo gene_id)
+matrix_ids <- setdiff(colnames(raw_counts), "gene_id")
+metadata_ids <- uuid_to_tcga$file_id
 
-# Filtrar diretórios com base nos IDs do manifesto
-filtered_dirs <- rnaseq_coad.dirs[rnaseq_coad.dirs %in% manifest_ids]
-missing_ids <- setdiff(manifest_ids, filtered_dirs)
+# Diagnóstico: IDs não correspondentes
+missing_ids <- setdiff(matrix_ids, metadata_ids)
 
-# Aviso sobre IDs ausentes
+# Exibir IDs que estão na matriz, mas não nos metadados
 if (length(missing_ids) > 0) {
-  warning("Os seguintes IDs estão ausentes nos diretórios: ", paste(missing_ids, collapse = ", "))
+  warning("IDs ausentes nos metadados: ", paste(missing_ids, collapse = ", "))
+  stop("Erro: Existem IDs na matriz de contagem que não têm correspondência nos metadados.")
 }
 
-# Ordenar diretórios conforme a ordem no manifesto
-ordered_dirs <- filtered_dirs[match(manifest_ids, filtered_dirs)]
-print(ordered_dirs)  # Verifique a ordem
+# Criar o dataframe de condições somente com IDs correspondentes
+sample_conditions <- data.frame(
+  row.names = matrix_ids,
+  condition = uuid_to_tcga$condition[match(matrix_ids, uuid_to_tcga$file_id)]
+)
 
-# Verificar se há IDs ausentes no manifesto
-if (any(is.na(ordered_dirs))) {
-  stop("Erro: Há IDs no manifesto que não correspondem a nenhum diretório disponível.")
+# Verificar se todas as amostras têm condição associada
+if (any(is.na(sample_conditions$condition))) {
+  stop("Erro: Algumas amostras não têm condição associada. Verifique o mapeamento.")
 }
 
-# Inicializar matriz com o primeiro diretório
-first_file <- list.files(paste0('C:/Users/Usuário/Downloads/TCGA/COAD/', ordered_dirs[1]), pattern = '.tsv')
-raw_counts <- read.delim(paste0('C:/Users/Usuário/Downloads/TCGA/COAD/', ordered_dirs[1], '/', first_file), skip = 1)
-raw_counts <- raw_counts[, c("gene_id", "unstranded")]
-colnames(raw_counts)[2] <- ordered_dirs[1]
+print(missing_ids)
 
-# Loop para adicionar os demais diretórios
-for (i in ordered_dirs[-1]) {
-  file_name <- list.files(paste0('C:/Users/Usuário/Downloads/TCGA/COAD/', i), pattern = '.tsv')
-  tmp <- read.delim(paste0('C:/Users/Usuário/Downloads/TCGA/COAD/', i, '/', file_name), skip = 1)
-  tmp <- tmp[, c("gene_id", "unstranded")]
-  colnames(tmp)[2] <- i
-  raw_counts <- merge(raw_counts, tmp, by = "gene_id", all = TRUE)  # Manter todos os genes, mesmo se estiverem ausentes em algum arquivo
+# Verificar a matriz de condições
+head(sample_conditions)
+
+# --- Processar Matriz de Contagem ---
+# Remover coluna de IDs dos genes, se presente
+if ("gene_id" %in% colnames(raw_counts)) {
+  row.names(raw_counts) <- raw_counts$gene_id
+  raw_counts <- raw_counts[, -1]
 }
 
-# Garantir que a coluna gene_id seja a primeira
-raw_counts <- raw_counts %>%
-  select(gene_id, everything())  # Mover gene_id para a primeira coluna
+# Garantir que a matriz é numérica
+raw_counts <- as.matrix(raw_counts)
+mode(raw_counts) <- "numeric"
 
-# Transformar a matriz para numérica, excluindo a coluna gene_id
-raw_counts_matrix <- as.matrix(raw_counts[, -1])  # Remove a coluna gene_id para a matriz
-rownames(raw_counts_matrix) <- raw_counts$gene_id  # Adiciona os IDs dos genes como nomes das linhas
-
-# Verificar se a matriz é numérica
-if (!all(sapply(raw_counts_matrix, is.numeric))) {
-  stop("Erro: Valores na matriz 'raw_counts_matrix' não são numéricos.")
+# Verificar se há valores negativos
+if (any(raw_counts < 0)) {
+  warning("A matriz contém valores negativos. Substituindo por 0.")
+  raw_counts[raw_counts < 0] <- 0
 }
 
-# Salvar matriz gerada
-saveRDS(raw_counts_matrix, file = 'C:/Users/Usuário/Downloads/TCGA/TCGA_COAD_RNASEQ_ORDERED.rds')
+# Remover genes com valores ausentes
+raw_counts <- raw_counts[complete.cases(raw_counts), ]
+
+# Verificar estrutura final da matriz de contagem
+summary(as.vector(raw_counts))
+all(raw_counts == floor(raw_counts))  # Deve retornar TRUE
+
+# --- Verificar Dados ---
+print(dim(raw_counts))
+print(table(sample_conditions$condition))
+
+# Converter condição para fator
+sample_conditions$condition <- as.factor(sample_conditions$condition)
+
+
+# --- Criar Objeto DESeqDataSet ---
+dds <- DESeqDataSetFromMatrix(
+  countData = raw_counts,
+  colData = sample_conditions,
+  design = ~ condition
+)
+
+# --- Análise com DESeq ---
+dds <- DESeq(dds)
+
+# Extrair resultados
+res <- results(dds, contrast = c("condition", "Tumor", "Normal"))
+
+# Ordenar por p-valor ajustado
+res <- res[order(res$padj), ]
+
+# Visualizar os primeiros genes
+head(res)
+
+# Salvar o objeto DESeqDataSet
+saveRDS(dds, file = 'C:/Users/Usuário/Downloads/TCGA/TCGA_COAD_DESeq.rds')
+
+##### Gráfico MA
+plotMA(res, main = "MA Plot - Tumor vs Normal")
+
+# Filtrar Genes Significativos
+significant_genes <- res[which(res$padj < 0.05), ]
+write.csv(significant_genes, file = "C:/Users/Usuário/Downloads/TCGA/TCGA_COAD_DESeq_significant_genes.csv", row.names = TRUE)
+
+library(ggplot2)
+
+# Adicionar coluna para significância
+res$significant <- ifelse(res$padj < 0.05, "Yes", "No")
+
+# Criar MA plot com ggplot2
+ggplot(res, aes(x = log2(baseMean), y = log2FoldChange, color = significant)) +
+  geom_point(alpha = 0.8) +
+  scale_color_manual(values = c("No" = "grey", "Yes" = "red")) +
+  theme_minimal() +
+  labs(title = "MA Plot", x = "log2(Mean Normalized Counts)", y = "log2(Fold Change)") +
+  theme(legend.position = "top")
