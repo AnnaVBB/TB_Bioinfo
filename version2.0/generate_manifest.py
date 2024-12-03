@@ -27,7 +27,7 @@ def makeParams(file_ids):
             }
         },
         "format": "TSV",
-        "fields": "file_id,file_name,cases.submitter_id,cases.samples.tissue_type",
+        "fields": "file_id,file_name,cases.submitter_id,cases.samples.submitter_id,cases.samples.tissue_type",
         "size": len(file_ids)
     }
 
@@ -48,17 +48,18 @@ def gdcAPI(file_ids, manifest_path):
         # Ajusta os cabeçalhos para refletir os campos desejados
         original_headers = next(reader)
         renamed_headers = [
-            "tissue_type", "submitter_id", "file_id", "file_name"
+            "submitter_sample","tissue_type","submitter_id", "file_id","file_name"
         ]
         writer.writerow(renamed_headers)
 
         for row in reader:
             # Cria um novo row com a ordem correta
             new_row = [
-                row[0],  # tissue_type
-                row[1],  # submitter_id
-                row[2],  # file_id
-                row[3],  # file_name
+                row[0],  # submitter_sample
+                row[1],  # tissue_type
+                row[2],  # submitter_id
+                row[3],  # file_id
+                row[4],  # file_name
             ]
             writer.writerow(new_row)
 
