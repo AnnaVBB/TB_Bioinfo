@@ -37,27 +37,23 @@ colnames(raw_counts)[2] <- ordered_dirs[1]
 for (i in ordered_dirs[-1]) {
   file_name <- list.files(paste0('C:/Users/Usuário/Downloads/TCGA/COAD/', i), pattern = '.tsv')
   tmp <- read.delim(paste0('C:/Users/Usuário/Downloads/TCGA/COAD/', i, '/', file_name), skip = 1)
-  tmp <- tmp[, "unstranded"]
-  raw_counts <- cbind(raw_counts, tmp)
-  colnames(raw_counts)[ncol(raw_counts)] <- i
+  tmp <- tmp[, c("gene_id", "unstranded")]
+  colnames(tmp)[2] <- i
+  raw_counts <- merge(raw_counts, tmp, by = "gene_id", all = TRUE)  # Manter todos os genes, mesmo se estiverem ausentes em algum arquivo
 }
 
-# Ajustar nomes das linhas e converter para matriz numérica
-rownames(raw_counts) <- raw_counts$gene_id
-raw_counts <- raw_counts[, -1]
+# Garantir que a coluna gene_id seja a primeira
+raw_counts <- raw_counts %>%
+  select(gene_id, everything())  # Mover gene_id para a primeira coluna
 
-# Transformar matriz para numérica
-raw_counts <- as.matrix(raw_counts)
-raw_counts <- apply(raw_counts, 2, as.numeric)
+# Transformar a matriz para numérica, excluindo a coluna gene_id
+raw_counts_matrix <- as.matrix(raw_counts[, -1])  # Remove a coluna gene_id para a matriz
+rownames(raw_counts_matrix) <- raw_counts$gene_id  # Adiciona os IDs dos genes como nomes das linhas
 
 # Verificar se a matriz é numérica
-if (!is.numeric(raw_counts)) {
-  stop("Erro: Valores na matriz 'raw_counts' não são numéricos.")
+if (!all(sapply(raw_counts_matrix, is.numeric))) {
+  stop("Erro: Valores na matriz 'raw_counts_matrix' não são numéricos.")
 }
 
 # Salvar matriz gerada
-saveRDS(raw_counts, file = 'C:/Users/Usuário/Downloads/TCGA/TCGA_COAD_RNASEQ_ORDERED.rds')
-
-# Verificar dimensões da matriz
-print(dim(raw_counts))
-print(head(raw_counts))
+saveRDS(raw_counts_matrix, file = 'C:/Users/Usuário/Downloads/TCGA/TCGA_COAD_RNASEQ_ORDERED.rds')
