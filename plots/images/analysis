@@ -1,9 +1,0 @@
-#Fazer as análises das imagens geradas 
-Exemplo:
-#Volcano-COAD: 'explicação detalhada.....'
-#Volcano-LUAD: 'explicação detalhada.....'
-
-#Volcano
-#Heatmap
-#Gene expression clusttering
-#Gráficos de barras ou gráficos de dispersão (para visualizar a expressão dos principais genes de interesse.)
