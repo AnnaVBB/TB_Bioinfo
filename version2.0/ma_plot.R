@@ -87,6 +87,7 @@ head(res)
 saveRDS(dds, file = 'C:/Users/Usuário/Downloads/TCGA/TCGA_COAD_DESeq.rds')
 
 ##### Gráfico MA
+library(DESeq2)
 plotMA(res, main = "MA Plot - Tumor vs Normal")
 
 # Filtrar Genes Significativos
