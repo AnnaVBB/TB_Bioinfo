@@ -4,7 +4,7 @@
 library(TCGAbiolinks)
 library(SummarizedExperiment)
 
-#project- submitter_id--ajcc_pathologic_stage- gender --- vital_status -- age_at_index-
+#Variáveis selecionadas: project- submitter_id; ajcc_pathologic_stage; gender; vital_status; age_at_index-
 
 manifest_luad <- read.delim("C:/Users/Home/Documents/USP2024/bioinfo/tb1/manifest_luad_filtered.txt")
   
