@@ -1,8 +1,8 @@
 Read.me
-1) Baixar o manifesto (483 tumoral, 41 normal) {GDC portal}
-2) Baixar os dados clínicos e criar uma tabela com as colunas de interesse (por enquanto: o tipo de projeto, id e barcode) {clinical_data.R}
+1) Baixar o manifesto (Filtrar por RNA-seq e STAR-Counts) {GDC portal}
+2) Baixar os dados clínicos e criar uma tabela com as colunas de interesse {clinical_data.R}
 3) Baixar o manifesto com o tipo de amostra e barcode (generate_manifest.py)
-  Executar no terminal:
+  Executar no terminal (exemplo):
   python C:\\Users\\Usuário\\Downloads\\TCGA\\generate_manifest.py -i C:\\Users\\Usuário\\Downloads\\TCGA\\gdc_manifest_coad_one.txt
 4) Filtrar o manifesto, pareando uma amostra normal com uma tumoral e excluindo as demais (filtered_manifest.py)
 5) Excluir as colunas sample_type, id e barcode (rebuild_manifest.py)
@@ -14,11 +14,11 @@ Read.me
 8) mapear os IDs do manifesto para os IDs da matriz de contagem, criar a matriz sample_conditions para análise diferencial (deseq_matrix.R)
 9) MA plot (ma_plot.R)
 9) Cria o res.df (res_df.R)
-10) Volcano plot (plot_volcano.R e plot_volcano2.R
+10) Volcano plot (plot_volcano.R e plot_volcano2.R)
 11) Enrichment Analysis (an_enrichment.R)
 12) Comparação de Enrichment Analysis entre os tipos de câncer (comparacao.R)
-13) Heatmap 
-14) Análise e correlação dos Dados clínicos
+13) Heatmap (Heatmap.R)
+14) Análise e correlação dos Dados clínicos 
 
 
 
