@@ -1,5 +1,6 @@
-#para puxar e filtrar a matriz de dados clínicos referente ao TCGA (coad nesse caso), considerando o manifesto com os submitters IDS já prontos:
-# Carregar TCGAbiolinks
+#para puxar e filtrar a matriz de dados clínicos referente ao TCGA LUAD E COAD (neste aqui só estão os dados do
+# luad, mas é o mesmo para o Coad só modificamos o endereço) considerando o manifesto com os submitters IDS já prontos:
+# Carregar TCGAbiolinks 
 library(TCGAbiolinks)
 library(SummarizedExperiment)
 
