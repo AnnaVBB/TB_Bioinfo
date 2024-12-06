@@ -1,3 +1,7 @@
+##bibliotecas
+library(ComplexHeatmap)
+library(org.Hs.eg.db)
+
 ##selecionar os top50 genes mais diferencialmente expressos no dataframe de resultados pelo padj
 
 top50_genes <- dds_res[order(dds_res$padj),][1:50,]
